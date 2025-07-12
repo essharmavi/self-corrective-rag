@@ -1,12 +1,14 @@
 import os
 import sys
 
+from pydantic import BaseModel
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from langsmith import Client
 from langchain_openai import ChatOpenAI
-from app.core import WorkflowState, Grade
+from app.core import UserQuery, WorkflowState
 from dotenv import load_dotenv
-from typing import Union
+from typing import Optional, Union
 
 load_dotenv()
 
@@ -17,25 +19,18 @@ prompt = client.pull_prompt(
     "miracle/par_grading_documents_prompt_public", include_model=True
 )
 
-class WorkflowState(BaseModel):
-    user_query: UserQuery
-    document: Optional[str] = None
-    grade: Optional[str] = None
-    final_answer: Optional[str] = None
-    source: Optional[str] = None
-
-
 def llm_grade(state: WorkflowState)  -> WorkflowState:
     question = state.user_query.query
-    documents = state.document
+    documents = state.arxiv_document
+
     if documents is None or documents.strip() == "":
-        return WorkflowState(grade="No", document = "No relevant data found")
+        return WorkflowState(grade="No", arxiv_document = "No relevant data found", user_query=state.user_query)
 
     chain = prompt | model
     output = chain.invoke({"documents": documents, "question": question}).content
-    print(output)
+
     if output.startswith("yes"):
-        return WorkflowState(final_answer=documents, source="arXiv", document = documents, grade ="Yes")
+        return WorkflowState(source="arXiv", arxiv_document = documents, grade ="Yes", user_query=state.user_query)
     elif output.startswith("no"):
         grade = "No"
-        return WorkflowState(grade="No", document = documents)
+        return WorkflowState(grade="No", arxiv_document = documents, user_query=state.user_query)

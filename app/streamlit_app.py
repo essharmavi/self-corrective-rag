@@ -3,16 +3,15 @@ import sys
 import streamlit as st
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from app.core import WorkflowState
+from app.core import UserQuery, WorkflowState
+from app.categories_list import ARXIV_CATEGORIES
 from query.retrieve_arxiv import load_arxiv_documents
 from workflow.workflow import build_graph
 
 
 st.title("🎓 Academic Research Assistant (Self-Corrective RAG)")
 
-get_category = st.text_input(
-    "Enter your academic research area (e.g., Machine Learning):"
-)
+get_category = st.selectbox("Choose an arXiv Category:", ARXIV_CATEGORIES)
 
 
 if get_category:
@@ -28,15 +27,14 @@ get_query = st.text_input("Now enter a specific query related to this area:")
 if get_category and get_query:
     if st.button("🔍 Search for Answers"):
         with st.spinner("🤖 Searching relevant information..."):
-            query_obj = UserQuery(category=get_category, query=get_query)
+            category=get_category.strip()
+            query=get_query.strip()
+            query_obj = UserQuery(category=category, query=query)
             initial_state = WorkflowState(user_query=query_obj)
             graph = build_graph()
             result = graph.invoke(initial_state)
-            st.json(result if isinstance(result, dict) else result.dict())
-            print(result)
-
             st.markdown("### 📄 Final Answer:")
-            st.write(result.final_answer)
+            st.write(result['final_answer'])
 
             st.markdown("### 🔗 Source:")
-            st.write(result.source)
+            st.write(result['source'])

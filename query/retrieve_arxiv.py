@@ -13,7 +13,7 @@ def load_arxiv_documents(category):
 
     search_category = arxiv.Search(
         query=category,  
-        max_results=15,
+        max_results=25,
         sort_by=arxiv.SortCriterion.SubmittedDate,
     )
 
