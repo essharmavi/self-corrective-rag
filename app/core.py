@@ -13,3 +13,4 @@ class WorkflowState(BaseModel):
     tavily_summary: Optional[str] = None
     final_answer: Optional[str] = None
     source: Optional[str] = None
+    error: Optional[str] = None

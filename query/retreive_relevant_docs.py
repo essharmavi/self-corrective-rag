@@ -41,7 +41,7 @@ def get_embedding(text, model="text-embedding-3-large"):
 def get_relevant_docs(state: WorkflowState) -> WorkflowState:
     query_embedding = get_embedding(state.user_query.query)
     if query_embedding is None:
-        return WorkflowState(document="Embedding generation failed.", user_query=state.user_query)
+        return WorkflowState(error="Embedding generation failed.", user_query=state.user_query)
 
     try:
         results = index.query(
@@ -53,10 +53,10 @@ def get_relevant_docs(state: WorkflowState) -> WorkflowState:
         )
     except Exception as e:
         print(f"Pinecone query error: {e}")
-        return WorkflowState(document="Vector DB query failed.", user_query=state.user_query)
+        return WorkflowState(error="Vector DB query failed.", user_query=state.user_query)
 
     if not results or not results["matches"]:
-        return WorkflowState(document="No relevant documents found.", user_query=state.user_query)
+        return WorkflowState(error="No relevant documents found.", user_query=state.user_query)
 
     relevant_doc = results["matches"][0]["metadata"]["text"]
 
