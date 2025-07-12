@@ -16,7 +16,6 @@ def router_node(state: WorkflowState) -> str:
 
 def build_graph():
     flow = StateGraph(WorkflowState)
-
     flow.add_node("get_relevant_docs", get_relevant_docs)
     flow.add_node("llm_grading", llm_grade)
     flow.add_node("tavily_search", tavily_search)
