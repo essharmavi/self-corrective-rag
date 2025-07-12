@@ -40,16 +40,24 @@ def get_embedding(text, model="text-embedding-3-large"):
 
 def get_relevant_docs(query_obj) -> Summary:
     query_embedding = get_embedding(query_obj.query)
-    results = index.query(
-        vector=query_embedding,  
-        top_k=3,
-        include_metadata=True,
-        include_values=False,
-        namespace="__default__",
-    )
+    if query_embedding is None:
+        return Summary(relevant_doc="Embedding generation failed.", user_query=query_obj)
 
-    if not results:
-        return "No relevant documents found."
+    try:
+        results = index.query(
+            vector=query_embedding,
+            top_k=3,
+            include_metadata=True,
+            include_values=False,
+            namespace="__default__",
+        )
+    except Exception as e:
+        print(f"Pinecone query error: {e}")
+        return Summary(relevant_doc="Vector DB query failed.", user_query=query_obj)
+
+    if not results or not results["matches"]:
+        return Summary(relevant_doc="No relevant documents found.", user_query=query_obj)
+
     relevant_doc = results["matches"][0]["metadata"]["text"]
     print(relevant_doc)
 

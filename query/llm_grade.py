@@ -21,6 +21,8 @@ prompt = client.pull_prompt(
 def llm_grade(state: Summary)  -> Union[Grade, FinalAnswer]:
     question = state.user_query.query
     documents = state.relevant_doc
+    if documents is None or documents.strip() == "":
+        return Grade(grade="No")
 
     chain = prompt | model
     output = chain.invoke({"documents": documents, "question": question}).content
