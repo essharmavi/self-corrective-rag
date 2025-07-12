@@ -1,5 +1,5 @@
 from langgraph.graph import START, END, StateGraph
-from app.core import UserQuery, Grade, FinalAnswer, Summary
+from app.core import WorkflowState
 from query.tavily_search import tavily_search
 from query.llm_grade import llm_grade
 from query.retreive_relevant_docs import get_relevant_docs
@@ -13,7 +13,7 @@ def router_node(state):
         return "tavily_search"
 
 def build_graph():
-    flow = StateGraph(UserQuery)
+    flow = StateGraph(WorkflowState)
 
     flow.add_node("get_relevant_docs", get_relevant_docs)
     flow.add_node("llm_grading", llm_grade)

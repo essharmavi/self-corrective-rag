@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from langsmith import Client
 from langchain_openai import ChatOpenAI
-from app.core import Summary, Grade, UserQuery, FinalAnswer
+from app.core import WorkflowState, Grade
 from dotenv import load_dotenv
 from typing import Union
 
@@ -17,18 +17,25 @@ prompt = client.pull_prompt(
     "miracle/par_grading_documents_prompt_public", include_model=True
 )
 
+class WorkflowState(BaseModel):
+    user_query: UserQuery
+    document: Optional[str] = None
+    grade: Optional[str] = None
+    final_answer: Optional[str] = None
+    source: Optional[str] = None
 
-def llm_grade(state: Summary)  -> Union[Grade, FinalAnswer]:
+
+def llm_grade(state: WorkflowState)  -> WorkflowState:
     question = state.user_query.query
-    documents = state.relevant_doc
+    documents = state.document
     if documents is None or documents.strip() == "":
-        return Grade(grade="No")
+        return WorkflowState(grade="No", document = "No relevant data found")
 
     chain = prompt | model
     output = chain.invoke({"documents": documents, "question": question}).content
     print(output)
     if output.startswith("yes"):
-        return FinalAnswer(final_answer=documents, source="arXiv")
+        return WorkflowState(final_answer=documents, source="arXiv", document = documents, grade ="Yes")
     elif output.startswith("no"):
         grade = "No"
-        return Grade(grade=grade)
+        return WorkflowState(grade="No", document = documents)

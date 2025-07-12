@@ -3,7 +3,7 @@ import sys
 import streamlit as st
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from app.core import UserQuery
+from app.core import WorkflowState
 from query.retrieve_arxiv import load_arxiv_documents
 from workflow.workflow import build_graph
 
@@ -29,8 +29,9 @@ if get_category and get_query:
     if st.button("🔍 Search for Answers"):
         with st.spinner("🤖 Searching relevant information..."):
             query_obj = UserQuery(category=get_category, query=get_query)
+            initial_state = WorkflowState(user_query=query_obj)
             graph = build_graph()
-            result = graph.invoke(query_obj)
+            result = graph.invoke(initial_state)
             st.json(result if isinstance(result, dict) else result.dict())
             print(result)
 

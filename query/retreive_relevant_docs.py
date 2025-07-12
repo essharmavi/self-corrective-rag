@@ -2,7 +2,7 @@ from langchain_openai import OpenAIEmbeddings
 from pydantic import BaseModel, Field
 from pinecone import Pinecone
 from dotenv import load_dotenv
-from app.core import Summary
+from app.core import WorkflowState
 import os
 import openai
 
@@ -38,10 +38,10 @@ def get_embedding(text, model="text-embedding-3-large"):
         return None
 
 
-def get_relevant_docs(query_obj) -> Summary:
+def get_relevant_docs(query_obj) -> WorkflowState:
     query_embedding = get_embedding(query_obj.query)
     if query_embedding is None:
-        return Summary(relevant_doc="Embedding generation failed.", user_query=query_obj)
+        return WorkflowState(document="Embedding generation failed.", user_query=query_obj)
 
     try:
         results = index.query(
@@ -53,13 +53,13 @@ def get_relevant_docs(query_obj) -> Summary:
         )
     except Exception as e:
         print(f"Pinecone query error: {e}")
-        return Summary(relevant_doc="Vector DB query failed.", user_query=query_obj)
+        return WorkflowState(document="Vector DB query failed.", user_query=query_obj)
 
     if not results or not results["matches"]:
-        return Summary(relevant_doc="No relevant documents found.", user_query=query_obj)
+        return WorkflowState(document="No relevant documents found.", user_query=query_obj)
 
     relevant_doc = results["matches"][0]["metadata"]["text"]
     print(relevant_doc)
 
-    return Summary(relevant_doc=relevant_doc, user_query=query_obj)
+    return WorkflowState(document=relevant_doc, user_query=query_obj)
 
